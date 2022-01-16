@@ -1,9 +1,35 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import {
+  ComposableMap,
+  Geographies,
+  Geography,
+  ZoomableGroup,
+} from "react-simple-maps";
+import { scaleQuantile } from "d3-scale";
+
+const geoUrl = require("../constants/geo-url.json");
 
 const Dashboard = () => {
   const [clickedFlag, setClickedFlag] = useState(1);
   const [logoView, setLogoView] = useState(false);
+  const [scaleSize, setScaleSize] = useState(1);
+
+  const [position, setPosition] = useState({ coordinates: [0, 0], zoom: 1 });
+
+  function handleZoomIn() {
+    if (position.zoom >= 4) return;
+    setPosition((pos) => ({ ...pos, zoom: pos.zoom * 1.5 }));
+  }
+
+  function handleZoomOut() {
+    if (position.zoom <= 0.5) return;
+    setPosition((pos) => ({ ...pos, zoom: pos.zoom / 1.5 }));
+  }
+
+  function handleMoveEnd(position: any) {
+    setPosition(position);
+  }
 
   useEffect(() => {
     const setResponsiveness = () => {
@@ -92,9 +118,33 @@ const Dashboard = () => {
           </div>
         </div>
         <div className="x-map">
-          <div className="x-map-zoom">
-            <span className="x-font-bg x-map-zoom-out">+</span>
-            <span className="x-font-bg x-map-zoom-in">-</span>
+          <ComposableMap
+            style={{
+              width: "85vw",
+              height: "90vh",
+            }}
+          >
+            <ZoomableGroup
+              zoom={position.zoom}
+              center={position.coordinates}
+              onMoveEnd={handleMoveEnd}
+            >
+              <Geographies geography={geoUrl}>
+                {(data: any) =>
+                  data.geographies.map((geo: any) => (
+                    <Geography key={geo.rsmKey} geography={geo} />
+                  ))
+                }
+              </Geographies>
+            </ZoomableGroup>
+          </ComposableMap>
+          <div className="x-map-zoom-tool">
+            <span className="x-font-bg x-map-zoom-out" onClick={handleZoomIn}>
+              +
+            </span>
+            <span className="x-font-bg x-map-zoom-in" onClick={handleZoomOut}>
+              -
+            </span>
           </div>
         </div>
       </div>
